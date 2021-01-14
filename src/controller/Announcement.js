@@ -35,7 +35,7 @@ module.exports = {
   deleteAnnouncement: async (req, res) => {
     try {
       const { id } = req.params;
-      const removeAnnouncement = await Announcement.remove({_id: id})
+      const removeAnnouncement = await Announcement.deleteOne({_id: id})
       res.json(removeAnnouncement)
     } catch (err) {
       res.status(500).json({ message: err });
