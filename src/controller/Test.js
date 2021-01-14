@@ -1,4 +1,5 @@
 const {createTestName} = require("../service/Test");
+const Post = require("../model/Post");
 
 module.exports = {
     postTest: (req,res) => {
@@ -21,5 +22,14 @@ module.exports = {
                 message: results
             })
         })
-    }
+    },
+
+    mongoGetTest: async (req, res) => {
+        try {
+          const posts = await Post.find();
+          res.json(posts);
+        } catch (err) {
+          res.json({ message: err });
+        }
+      }
 }

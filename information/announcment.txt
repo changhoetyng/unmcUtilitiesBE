@@ -1,0 +1,13 @@
+About api/announcement
+
+POST /postAnnouncement
+Body: {title: String, announcement: String}
+Post announcement
+
+GET /getAnnouncement
+QP: {limit: Integer(optional)}
+Retrieve all the announcement in the database
+
+DELETE /deleteAnnouncement/:id
+P: id, id of the post.
+Remove post with the id.

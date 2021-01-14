@@ -1,6 +1,8 @@
 const router = require("express").Router();
-const worm = require("./Test")
+const test = require("./Test")
+const announcement = require("./Announcement")
 
-router.use("/test",worm);
+router.use("/test",test);
+router.use("/announcement",announcement)
 
 module.exports = router;
