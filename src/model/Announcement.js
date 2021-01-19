@@ -1,11 +1,12 @@
 const mongoose = require('mongoose');
 
 const AnnouncementSchema = mongoose.Schema({
-    title: String,
-    announcement: String,
+    title: {type: String, required: true},
+    announcement: {type: String, required: true},
     date: {
         type: Date,
-        default: Date.now
+        default: Date.now,
+        required: true
     }
 });
 

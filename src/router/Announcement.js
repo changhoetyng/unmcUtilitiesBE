@@ -1,8 +1,9 @@
 const router = require("express").Router();
 const {postAnnouncement,getAnnouncement, deleteAnnouncement} = require("../controller/Announcement");
+const {requireAuth} = require("../middleware/authMiddleware")
 
-router.post("/postAnnouncement", postAnnouncement)
-router.get("/getAnnouncement", getAnnouncement)
-router.delete("/deleteAnnouncement/:id", deleteAnnouncement)
+router.post("/postAnnouncement",requireAuth, postAnnouncement)
+router.get("/getAnnouncement", requireAuth, getAnnouncement)
+router.delete("/deleteAnnouncement/:id", requireAuth, deleteAnnouncement)
 
 module.exports = router
