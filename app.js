@@ -3,10 +3,13 @@ const express = require("express");
 const app = express();
 const routeIndex = require("./src/router/index");
 const mongoose = require("mongoose");
+const {checkAdmin} = require("./src/defaultCheck/checkAdmin")
 
 const APP_PORT = process.env.APP_PORT || 3000;
 
 app.use(express.json());
+// Check if root admin user exists.
+checkAdmin();
 app.use("/api/", routeIndex);
 
 //connect db

@@ -42,15 +42,14 @@ module.exports = {
         email,
         role,
       });
-      res.status(201).json(saveUser);
+      return res.status(201).json(saveUser);
     } catch (err) {
       const errors = handleMongoErrors(err);
-      res.status(400).json({ errors });
+      return res.status(400).json({errors});
     }
   },
   loginUser: async (req, res) => {
     const { username, password } = req.body;
-    const {authorization} = req.headers;
 
     const user = await User.findOne({ username });
 
