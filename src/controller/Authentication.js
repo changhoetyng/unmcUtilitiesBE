@@ -2,51 +2,21 @@ const User = require("../model/User");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
-const createJwtToken = (username, role, email) => {
-  const maxAge = 3 * 24 * 60 * 60;
-  return jwt.sign({ username, role, email }, process.env.JWT_SECRET, {
-    expiresIn: maxAge,
+const createRefreshToken = (username, role, email) => {
+  return jwt.sign({ username, role, email }, process.env.JWT_REFRESH_SECRET,{
+    expiresIn: '30d'
   });
 };
 
-const handleMongoErrors = (err) => {
-  let errors = {};
-
-  if (err.code === 11000) {
-    Object.entries(err.keyPattern).map(([key]) => {
-      errors[key] = "Duplicated";
-    });
-  }
-
-  if (err.message.includes("User validation failed")) {
-    Object.values(err.errors).forEach(({ properties }) => {
-      errors[properties.path] = properties.message;
-    });
-  }
-
-  return errors;
+const createAccessToken = (username, role, email) => {
+  return jwt.sign({ username, role, email }, process.env.JWT_SECRET, {
+    expiresIn: '1d',
+  });
 };
 
 module.exports = {
-  createUser: async (req, res) => {
-    const { username, email, password, role } = req.body;
-
-    //Encrypt
-    const salt = await bcrypt.genSalt();
-    const encryptedPassword = await bcrypt.hash(password, salt);
-
-    try {
-      const saveUser = await User.create({
-        username,
-        encryptedPassword,
-        email,
-        role,
-      });
-      return res.status(201).json(saveUser);
-    } catch (err) {
-      const errors = handleMongoErrors(err);
-      return res.status(400).json({errors});
-    }
+  authSuccess: async (req, res) => {
+    return res.status(200).json({status: "successful"})
   },
   loginUser: async (req, res) => {
     const { username, password } = req.body;
@@ -56,18 +26,55 @@ module.exports = {
     if (user) {
       const auth = await bcrypt.compare(password, user.encryptedPassword);
       if (auth) {
-        const jwtToken = createJwtToken(user.username, user.role, user.email)
+        const accessToken = createAccessToken(user.username, user.role, user.email)
+        const refreshToken = createRefreshToken(user.username, user.role, user.email)
         return res.status(200).json({
           status: "successful",
-          jwt: jwtToken,
+          accessToken: accessToken,
+          refreshToken: refreshToken
         });
       }
       return res.status(401).json({
         error: "Wrong password",
       });
     }
-    return res.status(400).json({
+    return res.status(404).json({
       error: "No user found",
     });
   },
+  verifyRefreshToken: async (req,res) => {
+    const refreshToken = req.query.refreshToken
+    if(refreshToken == null) return res.status(401).json({error: "empty refresh token"})
+
+    jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET, (err, user) => {
+      if (err) return res.status(403).json({status: "unsuccessful"})
+      const accessToken = createAccessToken(user.username, user.role, user.email)
+      return res.status(200).json({ accessToken: accessToken })
+    })
+  },
+  changePassword: async (req,res) => {
+    const {oldPassword, newPassword} = req.body
+    const user = await User.findOne({username: req.authUsername})
+    if(user){
+      try{
+        const auth = await bcrypt.compare(oldPassword, user.encryptedPassword);
+        if(auth) {
+          try{
+            const salt = await bcrypt.genSalt();
+          const encryptedPassword = await bcrypt.hash(newPassword, salt);
+          const changePassword = await User.findOneAndUpdate({username: req.authUsername},{encryptedPassword: encryptedPassword})
+            return res.status(200).json({status: "Password changed", changePassword})
+          } catch(err) {
+            return res.status(403).json({err})
+          }
+        } else {
+          return res.status(403).json({error: "Wrong old Password"})
+        }
+      } catch(err){
+        return res.status(403).json({err})
+      }
+    } else {
+      return res.status(404).json({error: "user not found"})
+    }
+  }
 };

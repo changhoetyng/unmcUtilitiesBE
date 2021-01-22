@@ -1,8 +1,11 @@
 const router = require("express").Router();
-const {createUser, loginUser} = require("../controller/Authentication")
+const {loginUser, verifyRefreshToken, authSuccess,changePassword} = require("../controller/Authentication")
 const {isAdmin,requireAuth} = require("../middleware/authMiddleware")
 
-router.post("/createUser",isAdmin,createUser)
+
 router.post("/loginUser", loginUser)
+router.get("/verifyUser",requireAuth,authSuccess)
+router.get("/token", verifyRefreshToken)
+router.patch("/changePassword",requireAuth, changePassword)
 
 module.exports = router

@@ -4,8 +4,11 @@ const app = express();
 const routeIndex = require("./src/router/index");
 const mongoose = require("mongoose");
 const {checkAdmin} = require("./src/defaultCheck/checkAdmin")
+var cors = require('cors')
 
 const APP_PORT = process.env.APP_PORT || 3000;
+
+app.use(cors())
 
 app.use(express.json());
 // Check if root admin user exists.
@@ -15,7 +18,7 @@ app.use("/api/", routeIndex);
 //connect db
 mongoose.connect(
   process.env.DB_CONNECTION,
-  { useNewUrlParser: true, useUnifiedTopology: true ,useCreateIndex: true},
+  { useNewUrlParser: true, useUnifiedTopology: true ,useCreateIndex: true,useFindAndModify: true},
   () => console.log("db connected")
 );
 
