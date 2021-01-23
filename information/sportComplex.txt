@@ -1,0 +1,25 @@
+POST openDate
+open date for facility
+
+GET getDate
+get all the dates from facility
+
+PATCH closeTime
+status closed
+
+PATCH openTime
+status open
+
+PATCH booked
+status booked
+
+PATCH cancelBooking
+cancel booking make by student
+
+POST addFacility
+add facility for sport complex
+
+DELETE deleteFacility
+delete facility for sport complex
+*remember to remove everything in sport complex booking too.
+

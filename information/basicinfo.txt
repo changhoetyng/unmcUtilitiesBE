@@ -1,0 +1,5 @@
+There will be only one admin but many staff.
+
+Admin will be the root user where it can add more staff and delete staff.
+
+Admin are also responsible for adding new facilities and room.
