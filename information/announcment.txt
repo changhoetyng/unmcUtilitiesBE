@@ -1,6 +1,6 @@
 About api/announcement
 
-POST /postAnnouncement
+POST /postAnnouncement 
 Body: {title: String, announcement: String}
 Post announcement
 

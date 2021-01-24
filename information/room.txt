@@ -1,0 +1,36 @@
+About api/sportComplex
+
+POST /addRoom (Admin)
+Body: name
+add room 
+
+GET /getRoom
+get room
+
+POST /openDate
+body: _id, date
+open date for room
+
+GET /getDate
+query: roomId
+get all the dates from room
+
+DELETE deleteRoom
+body: roomId
+delete room
+
+PATCH closeTime done
+body: roomId, date, time
+status closed
+
+PATCH openTime
+body: roomId, date, time
+status open
+
+PATCH booked
+body: roomId, date, time, studentId
+status booked
+
+PATCH cancelBooking
+body: roomId, date, time
+cancel booking make by student

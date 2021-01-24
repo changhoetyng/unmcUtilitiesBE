@@ -31,7 +31,8 @@ module.exports = {
         return res.status(200).json({
           status: "successful",
           accessToken: accessToken,
-          refreshToken: refreshToken
+          refreshToken: refreshToken,
+          role: user.role
         });
       }
       return res.status(401).json({
@@ -63,6 +64,7 @@ module.exports = {
             const salt = await bcrypt.genSalt();
           const encryptedPassword = await bcrypt.hash(newPassword, salt);
           const changePassword = await User.findOneAndUpdate({username: req.authUsername},{encryptedPassword: encryptedPassword})
+
             return res.status(200).json({status: "Password changed", changePassword})
           } catch(err) {
             return res.status(403).json({err})

@@ -1,3 +1,23 @@
-/user/createUser 
+About api/user
 
+POST /createUser (Admin)
 Create user (staff)
+body: username, email, password
+
+GET /getAllStaff (Admin)
+Get all staff information
+
+DELETE /deleteUser (Admin)
+Delete Staff information
+body: _id
+
+GET /
+Get the particular user information
+
+PATCH /changeUsername
+Change username for that user
+body: username
+
+PATCH /changeEmail
+Change email for that user
+body: username

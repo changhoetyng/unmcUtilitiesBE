@@ -1,5 +1,5 @@
-const SportComplex = require("../model/SportComplex");
-const SportComplexBooking = require("../model/SportComplexBooking");
+const Room = require("../model/Room");
+const RoomBooking = require("../model/RoomBooking");
 const moment = require("moment");
 
 const handleMongoErrors = (err) => {
@@ -17,7 +17,7 @@ const handleMongoErrors = (err) => {
 
 const timeHandler = async (req, res, mode) => {
   try {
-    const { facilityId, date, time, studentId } = req.body;
+    const { roomId, date, time, studentId } = req.body;
     //err handler
     if (!time) {
       return res
@@ -31,7 +31,7 @@ const timeHandler = async (req, res, mode) => {
         .json({ status: "unsuccessful", message: "studentId is empty" });
     }
 
-    const getDate = await SportComplexBooking.findOne({ facilityId, date });
+    const getDate = await RoomBooking.findOne({ roomId, date });
     if (getDate) {
       const getStatus = getDate.timeListing.find((v) => v.time === time)
         .timeStatus.status;
@@ -85,19 +85,19 @@ const timeHandler = async (req, res, mode) => {
         }
       }
 
-      await SportComplexBooking.findOneAndUpdate(
-        { facilityId, date },
+      await RoomBooking.findOneAndUpdate(
+        { roomId, date },
         { timeListing: getDate.timeListing }
       );
-      const afterUpdate = await SportComplexBooking.findOne({
-        facilityId,
+      const afterUpdate = await RoomBooking.findOne({
+        roomId,
         date,
       });
       return res.status(201).json({ status: "successful", data: afterUpdate });
     } else {
       return res
         .status(404)
-        .json({ status: "unsuccessful", message: "facility not found" });
+        .json({ status: "unsuccessful", message: "room not found" });
     }
   } catch (err) {
     return res.status(400).json({ status: "unsuccessful", err });
@@ -105,14 +105,14 @@ const timeHandler = async (req, res, mode) => {
 };
 
 module.exports = {
-  addFacility: async (req, res) => {
+  addRoom: async (req, res) => {
     const { name } = req.body;
     if (name) {
       try {
-        const addFacility = await SportComplex.create({
+        const addRoom = await Room.create({
           name,
         });
-        return res.status(201).json(addFacility);
+        return res.status(201).json(addRoom);
       } catch (err) {
         const errors = handleMongoErrors(err);
         return res.status(400).json({ errors });
@@ -124,10 +124,10 @@ module.exports = {
       });
     }
   },
-  getFacility: async (req, res) => {
-    const getFacility = await SportComplex.find({});
-    if (getFacility) {
-      return res.status(200).json({ data: getFacility });
+  getRoom: async (req, res) => {
+    const getRoom = await Room.find({});
+    if (getRoom) {
+      return res.status(200).json({ data: getRoom });
     } else {
       return res.status(404).json({ status: "unsuccessful" });
     }
@@ -135,13 +135,16 @@ module.exports = {
   openDate: async (req, res) => {
     try {
       const { _id, date } = req.body;
-      const facilityCheck = await SportComplexBooking.findOne({  date: moment(date, "DD/MM/YYYY").format("DD/MM/YYYY") });
 
-      if(facilityCheck){
+      const roomCheck = await RoomBooking.findOne({  date: moment(date, "DD/MM/YYYY").format("DD/MM/YYYY") });
+
+      if(roomCheck){
         return res.status(400).json({ status: "time already exists"});
       }
-      const getFacility = await SportComplex.findOne({ _id });
-      if (getFacility && date) {
+
+      const getRoom = await Room.findOne({ _id });
+      
+      if (getRoom && date) {
         const hours = Array.from(
           {
             length: 24,
@@ -157,8 +160,8 @@ module.exports = {
           }
         );
 
-        const createBooking = await SportComplexBooking.create({
-          facilityId: _id,
+        const createBooking = await RoomBooking.create({
+          roomId: _id,
           date: moment(date, "DD/MM/YYYY").format("DD/MM/YYYY"),
           timeListing: hours,
         });
@@ -168,7 +171,7 @@ module.exports = {
           .status(404)
           .json({
             status: "unsuccessful",
-            message: "Incorrect facility Id or empty date",
+            message: "Incorrect room Id or empty date",
           });
       }
     } catch (err) {
@@ -177,33 +180,33 @@ module.exports = {
   },
   getDate: async (req, res) => {
     try {
-      const { facilityId } = req.query;
-      const getFacility = await SportComplexBooking.find({ facilityId });
-      if (getFacility) {
+      const { roomId } = req.query;
+      const getRoom = await RoomBooking.find({ roomId });
+      if (getRoom) {
         return res
           .status(200)
-          .json({ status: "successful", data: getFacility });
+          .json({ status: "successful", data: getRoom });
       } else {
         return res
           .status(404)
-          .json({ status: "unsuccessful", message: "facility not found" });
+          .json({ status: "unsuccessful", message: "room not found" });
       }
     } catch (err) {
       return res.status(400).json({ status: "unsuccessful", err });
     }
   },
-  deleteFacility: async (req, res) => {
+  deleteRoom: async (req, res) => {
     try {
-      const { facilityId } = req.body;
-      const getFacility = await SportComplex.findOne({ _id: facilityId });
-      if (getFacility) {
-        await SportComplex.deleteOne({ _id: facilityId });
-        await SportComplexBooking.deleteMany({ facilityId: facilityId });
+      const { roomId } = req.body;
+      const getRoom = await Room.findOne({ _id: roomId });
+      if (getRoom) {
+        await Room.deleteOne({ _id: roomId });
+        await RoomBooking.deleteMany({ roomId: roomId });
         return res.status(204).json({ status: "successful" });
       } else {
         return res
           .status(404)
-          .json({ status: "unsuccessful", message: "facility not found" });
+          .json({ status: "unsuccessful", message: "room not found" });
       }
     } catch (err) {
       return res.status(400).json({ status: "unsuccessful", err });

@@ -6,7 +6,7 @@ const sportComplexBookingSchema = mongoose.Schema({
     required: [true, "Please enter a name"],
   },
   date: {
-    type: Date,
+    type: String,
     required: [true, "Please enter a date"],
   },
   timeListing: [
@@ -27,6 +27,6 @@ const sportComplexBookingSchema = mongoose.Schema({
 });
 
 module.exports = mongoose.model(
-  "sportComplexBooking",
+  "sportComplexBookings",
   sportComplexBookingSchema
 );

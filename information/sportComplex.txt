@@ -1,25 +1,37 @@
-POST openDate
-open date for facility
+About api/sportComplex
 
-GET getDate
-get all the dates from facility
-
-PATCH closeTime
-status closed
-
-PATCH openTime
-status open
-
-PATCH booked
-status booked
-
-PATCH cancelBooking
-cancel booking make by student
-
-POST addFacility
+POST /addFacility (Admin)
+Body: name
 add facility for sport complex
 
+GET /getFacility
+get facility for sport complex
+
+POST /openDate
+body: _id, date
+open date for facility
+
+GET /getDate
+query: facilityId
+get all the dates from facility
+
 DELETE deleteFacility
+body: facilityId
 delete facility for sport complex
 *remember to remove everything in sport complex booking too.
 
+PATCH closeTime done
+body: facilityId, date, time
+status closed
+
+PATCH openTime
+body: facilityId, date, time
+status open
+
+PATCH booked
+body: facilityId, date, time, studentId
+status booked
+
+PATCH cancelBooking
+body: facilityId, date, time
+cancel booking make by student

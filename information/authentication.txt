@@ -1,0 +1,16 @@
+About api/auth
+
+POST /loginUser
+loginUser
+body: username, password
+
+GET /verifyUser
+verify token
+
+GET /token
+Get a new token
+query: refreshToken
+
+PATCH /changePassword
+Change password
+body: oldPassword, newPassword

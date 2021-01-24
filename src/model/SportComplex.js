@@ -8,4 +8,4 @@ const SportComplexSchema = mongoose.Schema({
       },
 });
 
-module.exports = mongoose.model('SportComplex', SportComplexSchema)
+module.exports = mongoose.model('SportComplexes', SportComplexSchema)

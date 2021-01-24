@@ -34,7 +34,7 @@ module.exports = {
 
     try {
       const deleteUser = await User.deleteOne({_id});
-      return res.status(200).json(deleteUser);
+      return res.status(204).json(deleteUser);
     } catch (err) {
       const errors = handleMongoErrors(err);
       return res.status(400).json({ errors });
@@ -50,7 +50,7 @@ module.exports = {
     }
   },
   createUser: async (req, res) => {
-    const { username, email, password, role } = req.body;
+    const { username, email, password } = req.body;
 
     //Encrypt
     const salt = await bcrypt.genSalt();
@@ -61,7 +61,7 @@ module.exports = {
         username,
         encryptedPassword,
         email,
-        role,
+        role: "staff",
       });
       return res.status(201).json(saveUser);
     } catch (err) {
@@ -78,7 +78,7 @@ module.exports = {
           { username: req.authUsername },
           { username: username }
         );
-        return res.status(200).json({ status: "successful", update });
+        return res.status(201).json({ status: "successful", update });
       } catch (err) {
         return res.status(400).json({ status: "error has occured" });
       }

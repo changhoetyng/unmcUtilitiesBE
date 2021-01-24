@@ -6,7 +6,7 @@ const roomBookingSchema = mongoose.Schema({
     required: [true, "Please enter a name"],
   },
   date: {
-    type: Date,
+    type: String,
     required: [true, "Please enter a date"],
   },
   timeListing: [
@@ -26,4 +26,4 @@ const roomBookingSchema = mongoose.Schema({
   ],
 });
 
-module.exports = mongoose.model("roomBooking", roomBookingSchema);
+module.exports = mongoose.model("roomBookings", roomBookingSchema);
