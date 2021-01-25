@@ -17,7 +17,7 @@ const handleMongoErrors = (err) => {
 
 const timeHandler = async (req, res, mode) => {
   try {
-    const { facilityId, date, time, studentId } = req.body;
+    const { facilityId, date, time, studentId, subCategoryId} = req.body;
     //err handler
     if (!time) {
       return res
@@ -31,7 +31,7 @@ const timeHandler = async (req, res, mode) => {
         .json({ status: "unsuccessful", message: "studentId is empty" });
     }
 
-    const getDate = await SportComplexBooking.findOne({ facilityId, date });
+    const getDate = await SportComplexBooking.findOne({ facilityId, date , subCategoryId});
     if (getDate) {
       const getStatus = getDate.timeListing.find((v) => v.time === time)
         .timeStatus.status;
@@ -86,12 +86,13 @@ const timeHandler = async (req, res, mode) => {
       }
 
       await SportComplexBooking.findOneAndUpdate(
-        { facilityId, date },
+        { facilityId, date, subCategoryId },
         { timeListing: getDate.timeListing }
       );
       const afterUpdate = await SportComplexBooking.findOne({
         facilityId,
         date,
+        subCategoryId
       });
       return res.status(201).json({ status: "successful", data: afterUpdate });
     } else {
@@ -111,10 +112,13 @@ module.exports = {
       try {
         const addFacility = await SportComplex.create({
           name,
+          currentUser: null,
+          subCategory: null
         });
         return res.status(201).json(addFacility);
       } catch (err) {
         const errors = handleMongoErrors(err);
+        console.log(err)
         return res.status(400).json({ errors });
       }
     } else {
@@ -127,21 +131,41 @@ module.exports = {
   getFacility: async (req, res) => {
     const getFacility = await SportComplex.find({});
     if (getFacility) {
-      return res.status(200).json({ data: getFacility });
+      var facility = []
+      for(const v of getFacility){
+        const facilityData = await SportComplexBooking.find({facilityId:v._id});
+        facility.push({
+          facilityId: v._id,
+          facility: v.name,
+          subCategory: v.subCategory,
+          data: facilityData
+        })
+      }
+      return res.status(200).json({ data: facility });
     } else {
       return res.status(404).json({ status: "unsuccessful" });
     }
   },
   openDate: async (req, res) => {
     try {
-      const { _id, date } = req.body;
-      const facilityCheck = await SportComplexBooking.findOne({  date: moment(date, "DD/MM/YYYY").format("DD/MM/YYYY") });
+      const { facilityId, date, subCategoryId } = req.body;
+      const facilityCheck = await SportComplexBooking.findOne({ facilityId, date: moment(date, "DD/MM/YYYY").format("DD/MM/YYYY"), subCategoryId });
 
       if(facilityCheck){
-        return res.status(400).json({ status: "time already exists"});
+        return res.status(400).json({ status: "unsuccessful", message: "time already exists"});
       }
-      const getFacility = await SportComplex.findOne({ _id });
-      if (getFacility && date) {
+      const getFacility = await SportComplex.findOne({ _id : facilityId});
+      const getSubCat = getFacility.subCategory.find(v => String(v._id) === subCategoryId)
+      if(!getFacility){
+        return res.status(404).json({ status: "unsuccessful", message: "no facility found"});
+      }
+
+      if(!getSubCat){
+        return res.status(404).json({ status: "unsuccessful", message: "no subcategory found"});
+      }
+
+
+      if (getFacility && date && getSubCat) {
         const hours = Array.from(
           {
             length: 24,
@@ -158,7 +182,8 @@ module.exports = {
         );
 
         const createBooking = await SportComplexBooking.create({
-          facilityId: _id,
+          facilityId: facilityId,
+          subCategoryId: subCategoryId,
           date: moment(date, "DD/MM/YYYY").format("DD/MM/YYYY"),
           timeListing: hours,
         });
@@ -172,6 +197,7 @@ module.exports = {
           });
       }
     } catch (err) {
+      console.log(err)
       return res.status(400).json({ status: "unsuccessful", err });
     }
   },
@@ -220,5 +246,38 @@ module.exports = {
   },
   cancelBooking: async (req, res) => {
     return timeHandler(req, res, "cancelBooking");
+  },
+  addSubCategory: async (req, res) => {
+    const { facilityId , subCategory} = req.body;
+    if(!subCategory){
+      return res.status(400).json({status:"unsuccessful", message: "empty subcategory"})
+    }
+    try{
+      const getFacility = await SportComplex.findOne({ _id: facilityId });
+      if(getFacility){
+
+        if(getFacility.subCategory){
+          getFacility.subCategory.push({subName: subCategory})
+        } else {
+          getFacility.subCategory = [{subName: subCategory}]
+        }
+
+        await SportComplex.findOneAndUpdate({
+          _id: facilityId,
+        }, {
+          subCategory: getFacility.subCategory
+        });
+        const afterUpdate = await SportComplex.findOne({
+          _id: facilityId,
+        });
+        return res.status(201).json({ status: "successful", data: afterUpdate });
+      } else {
+        return res.status(404).json({status: "unsuccessful", message: "facility not found"})
+      }
+    } catch (err){
+      console.log(err)
+      const errors = handleMongoErrors(err);
+      return res.status(400).json({ errors });
+    }
   },
 };

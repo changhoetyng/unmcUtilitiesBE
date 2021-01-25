@@ -5,7 +5,7 @@ Body: name
 add room 
 
 GET /getRoom
-get room
+get room with currentUser
 
 POST /openDate
 body: _id, date

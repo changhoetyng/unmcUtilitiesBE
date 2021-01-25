@@ -20,4 +20,4 @@ body: username
 
 PATCH /changeEmail
 Change email for that user
-body: username
+body: email

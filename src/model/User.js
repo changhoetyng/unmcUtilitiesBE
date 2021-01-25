@@ -13,7 +13,8 @@ const UserSchema = mongoose.Schema({
     type: String,
     unique: true,
     lowercase: true,
-    validate: [isEmail, 'Please enter a valid email']
+    validate: [isEmail, 'Please enter a valid email'],
+    sparse: true,
   },
   role: {
     type: String,

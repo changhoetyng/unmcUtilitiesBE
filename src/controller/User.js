@@ -1,6 +1,20 @@
 const User = require("../model/User");
 const bcrypt = require("bcrypt");
 var validator = require("validator");
+const jwt = require("jsonwebtoken");
+const { estimatedDocumentCount } = require("../model/User");
+
+const createRefreshToken = (username, role, email) => {
+  return jwt.sign({ username, role, email }, process.env.JWT_REFRESH_SECRET, {
+    expiresIn: "30d",
+  });
+};
+
+const createAccessToken = (username, role, email) => {
+  return jwt.sign({ username, role, email }, process.env.JWT_SECRET, {
+    expiresIn: "1d",
+  });
+};
 
 const handleMongoErrors = (err) => {
   let errors = {};
@@ -33,7 +47,7 @@ module.exports = {
     const { _id } = req.body;
 
     try {
-      const deleteUser = await User.deleteOne({_id});
+      const deleteUser = await User.deleteOne({ _id });
       return res.status(204).json(deleteUser);
     } catch (err) {
       const errors = handleMongoErrors(err);
@@ -42,7 +56,7 @@ module.exports = {
   },
   getAllStaff: async (req, res) => {
     try {
-      const findAllStaff = await User.find({role: "staff"});
+      const findAllStaff = await User.find({ role: "staff" });
       return res.status(200).json(findAllStaff);
     } catch (err) {
       const errors = handleMongoErrors(err);
@@ -60,7 +74,7 @@ module.exports = {
       const saveUser = await User.create({
         username,
         encryptedPassword,
-        email,
+        email: email,
         role: "staff",
       });
       return res.status(201).json(saveUser);
@@ -78,7 +92,26 @@ module.exports = {
           { username: req.authUsername },
           { username: username }
         );
-        return res.status(201).json({ status: "successful", update });
+
+        const updatedUser = await User.findOne({ username: req.authUsername });
+        const accessToken = createAccessToken(
+          updatedUser.username,
+          updatedUser.role,
+          updatedUser.email
+        );
+        const refreshToken = createRefreshToken(
+          updatedUser.username,
+          updatedUser.role,
+          updatedUser.email
+        );
+
+        return res
+          .status(201)
+          .json({
+            status: "successful",
+            accessToken: accessToken,
+            refreshToken: refreshToken,
+          });
       } catch (err) {
         return res.status(400).json({ status: "error has occured" });
       }

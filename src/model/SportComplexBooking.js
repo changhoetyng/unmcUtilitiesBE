@@ -5,6 +5,10 @@ const sportComplexBookingSchema = mongoose.Schema({
     type: String,
     required: [true, "Please enter a name"],
   },
+  subCategoryId: {
+    type: String,
+    required: [true, "subCategoryId empty"]
+  },
   date: {
     type: String,
     required: [true, "Please enter a date"],

@@ -1,11 +1,22 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const SportComplexSchema = mongoose.Schema({
-    name: {
+  name: {
+    type: String,
+    unique: true,
+    required: [true, "Please enter a name"],
+  },
+  currentUser: {
+    type: String,
+  },
+  subCategory: [
+    {
+      subName: {
         type: String,
-        required: [true, "Please enter a name"],
-        unique: true,
+        sparse: true,
       },
+    },
+  ],
 });
 
-module.exports = mongoose.model('SportComplexes', SportComplexSchema)
+module.exports = mongoose.model("SportComplexes", SportComplexSchema);

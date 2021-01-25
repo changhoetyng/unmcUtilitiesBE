@@ -5,7 +5,7 @@ Body: name
 add facility for sport complex
 
 GET /getFacility
-get facility for sport complex
+get facility for sport complex with currentUser
 
 POST /openDate
 body: _id, date

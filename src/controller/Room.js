@@ -1,6 +1,7 @@
 const Room = require("../model/Room");
 const RoomBooking = require("../model/RoomBooking");
 const moment = require("moment");
+const { getFacility } = require("./SportComplex");
 
 const handleMongoErrors = (err) => {
   let errors = {};
@@ -17,7 +18,7 @@ const handleMongoErrors = (err) => {
 
 const timeHandler = async (req, res, mode) => {
   try {
-    const { roomId, date, time, studentId } = req.body;
+    const { roomId, date, time, studentId, subCategoryId } = req.body;
     //err handler
     if (!time) {
       return res
@@ -31,7 +32,7 @@ const timeHandler = async (req, res, mode) => {
         .json({ status: "unsuccessful", message: "studentId is empty" });
     }
 
-    const getDate = await RoomBooking.findOne({ roomId, date });
+    const getDate = await RoomBooking.findOne({ roomId, date ,subCategoryId});
     if (getDate) {
       const getStatus = getDate.timeListing.find((v) => v.time === time)
         .timeStatus.status;
@@ -86,12 +87,13 @@ const timeHandler = async (req, res, mode) => {
       }
 
       await RoomBooking.findOneAndUpdate(
-        { roomId, date },
+        { roomId, date ,subCategoryId},
         { timeListing: getDate.timeListing }
       );
       const afterUpdate = await RoomBooking.findOne({
         roomId,
         date,
+        subCategoryIds
       });
       return res.status(201).json({ status: "successful", data: afterUpdate });
     } else {
@@ -111,6 +113,8 @@ module.exports = {
       try {
         const addRoom = await Room.create({
           name,
+          currentUser: null,
+          subCategory: null
         });
         return res.status(201).json(addRoom);
       } catch (err) {
@@ -127,14 +131,24 @@ module.exports = {
   getRoom: async (req, res) => {
     const getRoom = await Room.find({});
     if (getRoom) {
-      return res.status(200).json({ data: getRoom });
+      var room = []
+      for(const v of getRoom){
+        const roomData = await RoomBooking.find({roomId:v._id});
+        room.push({
+          roomId: v._id,
+          room: v.name,
+          subCategory: v.subCategory,
+          data: roomData
+        })
+      }
+      return res.status(200).json({ data: room });
     } else {
       return res.status(404).json({ status: "unsuccessful" });
     }
   },
   openDate: async (req, res) => {
     try {
-      const { _id, date } = req.body;
+      const { roomId, date, subCategoryId } = req.body;
 
       const roomCheck = await RoomBooking.findOne({  date: moment(date, "DD/MM/YYYY").format("DD/MM/YYYY") });
 
@@ -142,9 +156,18 @@ module.exports = {
         return res.status(400).json({ status: "time already exists"});
       }
 
-      const getRoom = await Room.findOne({ _id });
+      const getRoom = await Room.findOne({ _id: roomId });
+      const getSubCat = getRoom.subCategory.find(v => String(v.id) === subCategoryId)
       
-      if (getRoom && date) {
+      if(!getRoom){
+        return res.status(404).json({ status: "unsuccessful", message: "no facility found"});
+      }
+
+      if(!getSubCat){
+        return res.status(404).json({ status: "unsuccessful", message: "no subcategory found"});
+      }
+
+      if (getRoom && date && getSubCat) {
         const hours = Array.from(
           {
             length: 24,
@@ -161,7 +184,8 @@ module.exports = {
         );
 
         const createBooking = await RoomBooking.create({
-          roomId: _id,
+          roomId: roomId,
+          subCategoryId: subCategoryId,
           date: moment(date, "DD/MM/YYYY").format("DD/MM/YYYY"),
           timeListing: hours,
         });
@@ -223,5 +247,38 @@ module.exports = {
   },
   cancelBooking: async (req, res) => {
     return timeHandler(req, res, "cancelBooking");
+  },
+  addSubCategory: async (req, res) => {
+    const { roomId , subCategory} = req.body;
+    if(!subCategory){
+      return res.status(400).json({status:"unsuccessful", message: "empty subcategory"})
+    }
+    try{
+      const getRoom = await Room.findOne({ _id: roomId });
+      if(getRoom){
+
+        if(getRoom.subCategory){
+          getRoom.subCategory.push({subName: subCategory})
+        } else {
+          getRoom.subCategory = [{subName: subCategory}]
+        }
+
+        await Room.findOneAndUpdate({
+          _id: roomId,
+        }, {
+          subCategory: getRoom.subCategory
+        });
+        const afterUpdate = await Room.findOne({
+          _id: roomId,
+        });
+        return res.status(201).json({ status: "successful", data: afterUpdate });
+      } else {
+        return res.status(404).json({status: "unsuccessful", message: "room not found"})
+      }
+    } catch (err){
+      console.log(err)
+      const errors = handleMongoErrors(err);
+      return res.status(400).json({ errors });
+    }
   },
 };
