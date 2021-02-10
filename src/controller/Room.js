@@ -1,7 +1,6 @@
 const Room = require("../model/Room");
 const RoomBooking = require("../model/RoomBooking");
 const moment = require("moment");
-const { getFacility } = require("./SportComplex");
 
 const handleMongoErrors = (err) => {
   let errors = {};
@@ -160,7 +159,7 @@ module.exports = {
       const getSubCat = getRoom.subCategory.find(v => String(v.id) === subCategoryId)
       
       if(!getRoom){
-        return res.status(404).json({ status: "unsuccessful", message: "no facility found"});
+        return res.status(404).json({ status: "unsuccessful", message: "no room found"});
       }
 
       if(!getSubCat){
@@ -271,6 +270,44 @@ module.exports = {
         const afterUpdate = await Room.findOne({
           _id: roomId,
         });
+        return res.status(201).json({ status: "successful", data: afterUpdate });
+      } else {
+        return res.status(404).json({status: "unsuccessful", message: "room not found"})
+      }
+    } catch (err){
+      console.log(err)
+      const errors = handleMongoErrors(err);
+      return res.status(400).json({ errors });
+    }
+  },
+  deleteSubCategory: async (req, res) => {
+    const { roomId , subCategoryId} = req.body;
+    if(!subCategoryId){
+      return res.status(400).json({status:"unsuccessful", message: "empty subcategory id"})
+    }
+    try{
+      const getRoom = await SportComplex.findOne({ _id: roomId });
+      if(getRoom){
+
+        const indexRemove = getRoom.subCategory.findIndex(v => String(v._id) === subCategoryId)
+
+        if(indexRemove < 0) {
+          return res.status(404).json({status: "unsuccessful", message: "subcategory not found"})
+        }
+        
+        await SportComplexBooking.deleteMany({ roomId: roomId , subCategoryId: subCategoryId});
+
+        getRoom.subCategory.splice(indexRemove,1)
+
+        await SportComplex.findOneAndUpdate({
+          _id: roomId,
+        }, {
+          subCategory: getRoom.subCategory
+        });
+        const afterUpdate = await SportComplex.findOne({
+          _id: roomId,
+        });
+
         return res.status(201).json({ status: "successful", data: afterUpdate });
       } else {
         return res.status(404).json({status: "unsuccessful", message: "room not found"})

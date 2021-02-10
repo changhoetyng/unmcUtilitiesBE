@@ -7,8 +7,8 @@ add facility for sport complex
 GET /getFacility
 get facility for sport complex with currentUser
 
-POST /openDate
-body: facilityId, date, subCategoryId
+POST /openDate 
+body: facilityId, date (DD/MM/YYYY), subCategoryId
 open date for facility
 
 GET /getDate
@@ -21,21 +21,25 @@ delete facility for sport complex
 *remember to remove everything in sport complex booking too.
 
 PATCH closeTime done
-body: facilityId, date, time, subCategoryId
+body: facilityId, date (DD/MM/YYYY), time, subCategoryId
 status closed
 
 PATCH openTime
-body: facilityId, date, time, subCategoryId
+body: facilityId, date (DD/MM/YYYY), time, subCategoryId
 status open
 
 PATCH booked
-body: facilityId, date, time, studentId, subCategoryId
+body: facilityId, date (DD/MM/YYYY), time, studentId, subCategoryId
 status booked
 
 PATCH cancelBooking
-body: facilityId, date, time, subCategoryId
+body: facilityId, date (DD/MM/YYYY), time, subCategoryId
 cancel booking make by student
 
 PATCH addSubCategory
 body: facilityId, subcategory
 add a sub category
+
+PATCH deleteSubCategory
+body: subcategoryid, facilityId
+delete a sub category

@@ -280,4 +280,42 @@ module.exports = {
       return res.status(400).json({ errors });
     }
   },
+  deleteSubCategory: async (req, res) => {
+    const { facilityId , subCategoryId} = req.body;
+    if(!subCategoryId){
+      return res.status(400).json({status:"unsuccessful", message: "empty subcategory id"})
+    }
+    try{
+      const getFacility = await SportComplex.findOne({ _id: facilityId });
+      if(getFacility){
+
+        const indexRemove = getFacility.subCategory.findIndex(v => String(v._id) === subCategoryId)
+
+        if(indexRemove < 0) {
+          return res.status(404).json({status: "unsuccessful", message: "subcategory not found"})
+        }
+        
+        await SportComplexBooking.deleteMany({ facilityId: facilityId , subCategoryId: subCategoryId});
+
+        getFacility.subCategory.splice(indexRemove,1)
+
+        await SportComplex.findOneAndUpdate({
+          _id: facilityId,
+        }, {
+          subCategory: getFacility.subCategory
+        });
+        const afterUpdate = await SportComplex.findOne({
+          _id: facilityId,
+        });
+
+        return res.status(201).json({ status: "successful", data: afterUpdate });
+      } else {
+        return res.status(404).json({status: "unsuccessful", message: "facility not found"})
+      }
+    } catch (err){
+      console.log(err)
+      const errors = handleMongoErrors(err);
+      return res.status(400).json({ errors });
+    }
+  },
 };

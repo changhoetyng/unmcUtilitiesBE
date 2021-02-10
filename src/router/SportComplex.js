@@ -1,6 +1,6 @@
 const router = require("express").Router();
 const {isAdmin,requireAuth} = require("../middleware/authMiddleware")
-const {addFacility,getFacility,openDate,getDate,deleteFacility,closeTime,openTime,booked,cancelBooking,addSubCategory} = require("../controller/SportComplex")
+const {addFacility,getFacility,openDate,getDate,deleteFacility,closeTime,openTime,booked,cancelBooking,addSubCategory,deleteSubCategory} = require("../controller/SportComplex")
 
 router.post("/addFacility", isAdmin, addFacility)
 router.get("/getFacility", requireAuth, getFacility)
@@ -12,5 +12,6 @@ router.patch("/openTime", requireAuth, openTime)
 router.patch("/booked", requireAuth, booked)
 router.patch("/cancelBooking", requireAuth, cancelBooking)
 router.patch("/addSub", isAdmin, addSubCategory)
+router.patch("/deleteSub",isAdmin, deleteSubCategory)
 
 module.exports = router

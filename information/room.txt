@@ -8,7 +8,7 @@ GET /getRoom
 get room with currentUser
 
 POST /openDate
-body: roomId, date, subCategoryId
+body: roomId, date (DD/MM/YYYY), subCategoryId
 open date for room
 
 GET /getDate
@@ -20,21 +20,25 @@ body: roomId
 delete room
 
 PATCH closeTime done
-body: roomId, date, time, subCategoryId
+body: roomId, date (DD/MM/YYYY), time, subCategoryId
 status closed
 
 PATCH openTime
-body: roomId, date, time, subCategoryId
+body: roomId, date (DD/MM/YYYY), time, subCategoryId
 status open
 
 PATCH booked
-body: roomId, date, time, studentId, subCategoryId
+body: roomId, date (DD/MM/YYYY), time, studentId, subCategoryId
 status booked
 
 PATCH cancelBooking
-body: roomId, date, time, subCategoryId
+body: roomId, date (DD/MM/YYYY), time, subCategoryId
 cancel booking make by student
 
 PATCH addSubCategory
 body: roomId, subcategory
 add a sub category
+
+PATCH deleteSubCategory
+body: subcategoryid, facilityId
+delete a sub category
