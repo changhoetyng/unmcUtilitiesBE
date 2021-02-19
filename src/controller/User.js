@@ -44,10 +44,9 @@ module.exports = {
     }
   },
   deleteUser: async (req, res) => {
-    const { _id } = req.body;
-
+    const { id } = req.params;
     try {
-      const deleteUser = await User.deleteOne({ _id });
+      const deleteUser = await User.deleteOne({ _id: id });
       return res.status(204).json(deleteUser);
     } catch (err) {
       const errors = handleMongoErrors(err);
@@ -79,6 +78,7 @@ module.exports = {
       });
       return res.status(201).json(saveUser);
     } catch (err) {
+      console.log(err)
       const errors = handleMongoErrors(err);
       return res.status(400).json({ errors });
     }

@@ -4,7 +4,7 @@ const {getUser,changeUsername,changeEmail,createUser,getAllStaff,deleteUser} = r
 
 router.post("/createUser",isAdmin,createUser)
 router.get("/getAllStaff",isAdmin,getAllStaff)
-router.post("/deleteUser",isAdmin,deleteUser)
+router.delete("/deleteUser/:id",isAdmin,deleteUser)
 router.get("/",requireAuth,getUser)
 router.patch("/changeUsername",requireAuth, changeUsername)
 router.patch("/changeEmail",requireAuth, changeEmail)
