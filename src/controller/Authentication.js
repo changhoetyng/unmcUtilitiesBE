@@ -70,7 +70,7 @@ module.exports = {
             return res.status(403).json({err})
           }
         } else {
-          return res.status(403).json({error: "Wrong old Password"})
+          return res.status(403).json({error: {oldPassword: "Wrong old Password"}})
         }
       } catch(err){
         return res.status(403).json({err})
