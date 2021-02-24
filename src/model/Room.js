@@ -1,22 +1,22 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const RoomSchema = mongoose.Schema({
-    name: {
+  name: {
+    type: String,
+    required: [true, "Please enter a name"],
+    unique: true,
+  },
+  currentUser: {
+    type: String,
+  },
+  subCategory: [
+    {
+      subName: {
         type: String,
-        required: [true, "Please enter a name"],
-        unique: true,
+        sparse: true,
       },
-    currentUser: {
-      type: String
     },
-    subCategory: [
-      {
-        subName: {
-          type: String,
-          sparse: true,
-        },
-      },
-    ],
+  ],
 });
 
-module.exports = mongoose.model('Rooms', RoomSchema)
+module.exports = mongoose.model("Rooms", RoomSchema);

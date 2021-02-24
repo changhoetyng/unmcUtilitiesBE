@@ -65,6 +65,14 @@ module.exports = {
   createUser: async (req, res) => {
     const { username, email, password } = req.body;
 
+    if (!username || !password) {
+      return res.status(400).json({ error: "studentid or password is empty" });
+    }
+    if (!validator.isEmail(email)) {
+      return res
+        .status(200)
+        .json({ status: "error has occured", message: "incorrect email" });
+    }
     //Encrypt
     const salt = await bcrypt.genSalt();
     const encryptedPassword = await bcrypt.hash(password, salt);
@@ -78,7 +86,7 @@ module.exports = {
       });
       return res.status(201).json(saveUser);
     } catch (err) {
-      console.log(err)
+      console.log(err);
       const errors = handleMongoErrors(err);
       return res.status(400).json({ errors });
     }
@@ -105,13 +113,11 @@ module.exports = {
           updatedUser.email
         );
 
-        return res
-          .status(201)
-          .json({
-            status: "successful",
-            accessToken: accessToken,
-            refreshToken: refreshToken,
-          });
+        return res.status(201).json({
+          status: "successful",
+          accessToken: accessToken,
+          refreshToken: refreshToken,
+        });
       } catch (err) {
         return res.status(400).json({ status: "error has occured" });
       }
