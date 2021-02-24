@@ -286,7 +286,7 @@ module.exports = {
       return res.status(400).json({status:"unsuccessful", message: "empty subcategory id"})
     }
     try{
-      const getRoom = await SportComplex.findOne({ _id: roomId });
+      const getRoom = await Room.findOne({ _id: roomId });
       if(getRoom){
 
         const indexRemove = getRoom.subCategory.findIndex(v => String(v._id) === subCategoryId)
@@ -295,16 +295,16 @@ module.exports = {
           return res.status(404).json({status: "unsuccessful", message: "subcategory not found"})
         }
         
-        await SportComplexBooking.deleteMany({ roomId: roomId , subCategoryId: subCategoryId});
+        await RoomBooking.deleteMany({ roomId: roomId , subCategoryId: subCategoryId});
 
         getRoom.subCategory.splice(indexRemove,1)
 
-        await SportComplex.findOneAndUpdate({
+        await Room.findOneAndUpdate({
           _id: roomId,
         }, {
           subCategory: getRoom.subCategory
         });
-        const afterUpdate = await SportComplex.findOne({
+        const afterUpdate = await Room.findOne({
           _id: roomId,
         });
 
