@@ -18,12 +18,17 @@ const StudentSchema = mongoose.Schema({
   },
   bookings: [
     {
-      name: {type: String},
-      subCategory: {type: String},
+      venueName: {type: String},
+      type: {type: String,  enum: ["room", "sportComplex"]},
+      subCategoryName: {type: String},
+      subCategoryId: {type: String},
+      venueId: {type: String},
       timestamp: {type: String, default: () => moment().format("dddd, MMMM Do YYYY, h:mm:ss a")},
-      checkIn: {type: String, default: () => moment().format("dddd, MMMM Do YYYY, h:mm:ss a")},
-      checkOut: {type: String, default: () => moment().format("dddd, MMMM Do YYYY, h:mm:ss a")},
-      status: {type: String, enum: ["checkedOut", "ready", "using"]}
+      checkIn: {type: String},
+      checkOut: {type: String},
+      bookingTime: {type: String},
+      bookingDate: {type: String},
+      status: {type: String, enum: ["checkedOut", "booked", "checkedIn", "cancelled"]}
     }
   ]
 });

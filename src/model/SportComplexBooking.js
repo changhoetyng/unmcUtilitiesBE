@@ -24,6 +24,9 @@ const sportComplexBookingSchema = mongoose.Schema({
         },
         studentId: {
           type: String
+        },
+        bookingId: {
+          type: String
         }
       },
     },

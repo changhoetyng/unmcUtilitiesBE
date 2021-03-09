@@ -1,0 +1,23 @@
+About api/student
+
+- AUTHENTICATION
+
+POST /signup
+body: studentId, email, password
+Sign up a new account for the students
+
+POST /login
+body: studentId, password
+Login student
+
+GET /verifyUser
+Verify student
+
+GET /token
+Query: Update accessToken
+
+ - Announcment
+
+POST /getAnnouncement
+QP: {limit: Integer(optional)}
+Retrieve all the announcement in the database
