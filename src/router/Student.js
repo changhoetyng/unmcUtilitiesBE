@@ -1,28 +1,31 @@
 const router = require("express").Router();
-const {signup,loginUser,authSuccess,checkin,verifyRefreshToken,getFacilityName,getRoomName,showSelectedFacility,showSelectedRoom} = require("../controller/Student");
+const {signup,loginUser,authSuccess,checkin,verifyRefreshToken,getFacilityName,getRoomName,showSelectedFacility,showSelectedRoom,getBooked,getPast,checkInEnabled} = require("../controller/Student");
 const {getAnnouncement} = require("../controller/Announcement")
-const {requireAuth} = require("../middleware/studentMiddleware")
+const {StudentAuth} = require("../middleware/studentMiddleware")
 
 // AUTH
 router.post("/signup",signup)
 router.post("/login",loginUser)
-router.get("/verifyUser",requireAuth,authSuccess)
+router.get("/verifyUser",StudentAuth,authSuccess)
 router.get("/token",verifyRefreshToken)
 
 // Sport Complex
-router.get("/getFacilityName", requireAuth, getFacilityName)
-router.get("/showSelectedFacility/:facilityId", requireAuth, showSelectedFacility)
-router.get("/showSelectedRoom/:roomId", requireAuth, showSelectedRoom)
+router.get("/getFacilityName", StudentAuth, getFacilityName)
+router.get("/showSelectedFacility/:facilityId", StudentAuth, showSelectedFacility)
+router.get("/showSelectedRoom/:roomId", StudentAuth, showSelectedRoom)
 
 // Rooms
-router.get("/getRoomName", requireAuth, getRoomName)
+router.get("/getRoomName", StudentAuth, getRoomName)
 
 // Bookings
 router.post("/addBookingHistory")
-router.post("/checkin",requireAuth,checkin)
+router.get("/getBooked",StudentAuth,getBooked)
+router.get("/getPast",StudentAuth,getPast)
+router.get("/checkInEnabled/:bookedId",StudentAuth, checkInEnabled)
+router.post("/checkin",StudentAuth,checkin)
 router.post("/checkout")
 
 //Announcment
-router.get("/getAnnouncement", requireAuth, getAnnouncement)
+router.get("/getAnnouncement", StudentAuth, getAnnouncement)
 
 module.exports = router;

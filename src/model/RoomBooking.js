@@ -25,6 +25,9 @@ const roomBookingSchema = mongoose.Schema({
         studentId: {
           type: String,
         },
+        bookingId: {
+          type: String
+        }
       },
     },
   ],

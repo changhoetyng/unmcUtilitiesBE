@@ -6,14 +6,14 @@ const RoomSchema = mongoose.Schema({
     required: [true, "Please enter a name"],
     unique: true,
   },
-  currentUser: {
-    type: String,
-  },
   subCategory: [
     {
       subName: {
         type: String,
         sparse: true,
+      },
+      currentUser: {
+        type: String,
       },
     },
   ],

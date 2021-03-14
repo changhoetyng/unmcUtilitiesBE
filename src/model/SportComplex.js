@@ -6,14 +6,14 @@ const SportComplexSchema = mongoose.Schema({
     unique: true,
     required: [true, "Please enter a name"],
   },
-  currentUser: {
-    type: String,
-  },
   subCategory: [
     {
       subName: {
         type: String,
         sparse: true,
+      },
+      currentUser: {
+        type: String,
       },
     },
   ],

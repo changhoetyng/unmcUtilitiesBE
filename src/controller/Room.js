@@ -1,6 +1,7 @@
 const Room = require("../model/Room");
 const RoomBooking = require("../model/RoomBooking");
 const moment = require("moment");
+const Student = require("../model/Student");
 
 const handleMongoErrors = (err) => {
   let errors = {};
@@ -17,28 +18,45 @@ const handleMongoErrors = (err) => {
 
 const timeHandler = async (req, res, mode) => {
   try {
-    const { roomId, date, time, studentId, subCategoryId } = req.body;
+    const {
+      roomId,
+      date,
+      time,
+      studentId,
+      subCategoryId,
+      venueName,
+      subCategoryName,
+      bookingId,
+    } = req.body;
     //err handler
-    if (!time) {
-      return res
-        .status(404)
-        .json({ status: "unsuccessful", message: "time is empty" });
+    if (!time || !roomId || !subCategoryId || !date) {
+      return res.status(404).json({
+        status: "unsuccessful",
+        message: "Insufficient information to process",
+      });
     }
 
-    if (mode === "booked" && !studentId) {
+    if (mode === "cancelBooking" && !bookingId) {
+      return res.status(404).json({
+        status: "unsuccessful",
+        message: "Insufficient information to cancel booking",
+      });
+    }
+
+    if (mode === "booked" && (!studentId || !venueName || !subCategoryName)) {
       return res
         .status(404)
         .json({ status: "unsuccessful", message: "studentId is empty" });
     }
 
-    const getDate = await RoomBooking.findOne({ roomId, date ,subCategoryId});
+    const getDate = await RoomBooking.findOne({ roomId, date, subCategoryId });
     if (getDate) {
       const getStatus = getDate.timeListing.find((v) => v.time === time)
         .timeStatus.status;
-      if(mode === getStatus){
+      if (mode === getStatus) {
         return res
-            .status(400)
-            .json({ status: "unsuccessful", message: `time is already ${mode}` }); 
+          .status(400)
+          .json({ status: "unsuccessful", message: `time is already ${mode}` });
       }
 
       //For closing and opening booking
@@ -56,13 +74,40 @@ const timeHandler = async (req, res, mode) => {
 
       //For booking mode
       if (mode === "booked") {
+        const student = await Student.findOne({ studentId });
+        if (!student) {
+          return res.status(400).json({ error: "Invalid Student ID" });
+        }
+
         if (getStatus !== "close" && getStatus !== "booked") {
+          const student = await Student.findOneAndUpdate(
+            { studentId },
+            {
+              $push: {
+                bookings: {
+                  venueName,
+                  type: "room",
+                  subCategoryName,
+                  subCategoryId,
+                  venueId: roomId,
+                  status: "booked",
+                  bookingTime: time,
+                  bookingDate: date,
+                },
+              },
+            }
+          );
+          const getId = await Student.findOne({studentId})
+          const id = getId.bookings[getId.bookings.length - 1];
           getDate.timeListing.find(
             (v) => v.time === time
           ).timeStatus.status = mode;
           getDate.timeListing.find(
             (v) => v.time === time
           ).timeStatus.studentId = studentId;
+          getDate.timeListing.find(
+            (v) => v.time === time
+          ).timeStatus.bookingId = id._id;
         } else {
           return res
             .status(400)
@@ -72,12 +117,41 @@ const timeHandler = async (req, res, mode) => {
 
       //For cancel booking
       if (mode === "cancelBooking") {
-        if (getStatus === "booked") {
+        const student = await Student.findOne({
+          studentId,
+          bookings: {
+            $elemMatch: {
+              _id: bookingId,
+              type: "room",
+            },
+          },
+        });
+        if (getStatus === "booked" && student) {
+          await Student.findOneAndUpdate(
+            {
+              studentId,
+              bookings: {
+                $elemMatch: {
+                  _id: bookingId,
+                  type: "room",
+                },
+              },
+            },
+            {
+              $set: {
+                "bookings.$.status": "cancelled",
+              },
+            }
+          );
+
           getDate.timeListing.find((v) => v.time === time).timeStatus.status =
             "close";
           getDate.timeListing.find(
             (v) => v.time === time
           ).timeStatus.studentId = null;
+          getDate.timeListing.find(
+            (v) => v.time === time
+          ).timeStatus.bookingId = null;
         } else {
           return res
             .status(400)
@@ -86,13 +160,13 @@ const timeHandler = async (req, res, mode) => {
       }
 
       await RoomBooking.findOneAndUpdate(
-        { roomId, date ,subCategoryId},
+        { roomId, date, subCategoryId },
         { timeListing: getDate.timeListing }
       );
       const afterUpdate = await RoomBooking.findOne({
         roomId,
         date,
-        subCategoryIds
+        subCategoryId,
       });
       return res.status(201).json({ status: "successful", data: afterUpdate });
     } else {
@@ -101,6 +175,7 @@ const timeHandler = async (req, res, mode) => {
         .json({ status: "unsuccessful", message: "room not found" });
     }
   } catch (err) {
+    console.log(err);
     return res.status(400).json({ status: "unsuccessful", err });
   }
 };
@@ -113,7 +188,7 @@ module.exports = {
         const addRoom = await Room.create({
           name,
           currentUser: null,
-          subCategory: null
+          subCategory: null,
         });
         return res.status(201).json(addRoom);
       } catch (err) {
@@ -130,15 +205,15 @@ module.exports = {
   getRoom: async (req, res) => {
     const getRoom = await Room.find({});
     if (getRoom) {
-      var room = []
-      for(const v of getRoom){
-        const roomData = await RoomBooking.find({roomId:v._id});
+      var room = [];
+      for (const v of getRoom) {
+        const roomData = await RoomBooking.find({ roomId: v._id });
         room.push({
           roomId: v._id,
           room: v.name,
           subCategory: v.subCategory,
-          data: roomData
-        })
+          data: roomData,
+        });
       }
       return res.status(200).json({ data: room });
     } else {
@@ -149,21 +224,29 @@ module.exports = {
     try {
       const { roomId, date, subCategoryId } = req.body;
 
-      const roomCheck = await RoomBooking.findOne({  date: moment(date, "DD/MM/YYYY").format("DD/MM/YYYY") });
+      const roomCheck = await RoomBooking.findOne({
+        date: moment(date, "DD/MM/YYYY").format("DD/MM/YYYY"),
+      });
 
-      if(roomCheck){
-        return res.status(400).json({ status: "time already exists"});
+      if (roomCheck) {
+        return res.status(400).json({ status: "time already exists" });
       }
 
       const getRoom = await Room.findOne({ _id: roomId });
-      const getSubCat = getRoom.subCategory.find(v => String(v.id) === subCategoryId)
-      
-      if(!getRoom){
-        return res.status(404).json({ status: "unsuccessful", message: "no room found"});
+      const getSubCat = getRoom.subCategory.find(
+        (v) => String(v.id) === subCategoryId
+      );
+
+      if (!getRoom) {
+        return res
+          .status(404)
+          .json({ status: "unsuccessful", message: "no room found" });
       }
 
-      if(!getSubCat){
-        return res.status(404).json({ status: "unsuccessful", message: "no subcategory found"});
+      if (!getSubCat) {
+        return res
+          .status(404)
+          .json({ status: "unsuccessful", message: "no subcategory found" });
       }
 
       if (getRoom && date && getSubCat) {
@@ -190,12 +273,10 @@ module.exports = {
         });
         return res.status(201).json({ status: "successful", createBooking });
       } else {
-        return res
-          .status(404)
-          .json({
-            status: "unsuccessful",
-            message: "Incorrect room Id or empty date",
-          });
+        return res.status(404).json({
+          status: "unsuccessful",
+          message: "Incorrect room Id or empty date",
+        });
       }
     } catch (err) {
       return res.status(400).json({ status: "unsuccessful", err });
@@ -206,9 +287,7 @@ module.exports = {
       const { roomId } = req.query;
       const getRoom = await RoomBooking.find({ roomId });
       if (getRoom) {
-        return res
-          .status(200)
-          .json({ status: "successful", data: getRoom });
+        return res.status(200).json({ status: "successful", data: getRoom });
       } else {
         return res
           .status(404)
@@ -248,72 +327,95 @@ module.exports = {
     return timeHandler(req, res, "cancelBooking");
   },
   addSubCategory: async (req, res) => {
-    const { roomId , subCategory} = req.body;
-    if(!subCategory){
-      return res.status(400).json({status:"unsuccessful", message: "empty subcategory"})
+    const { roomId, subCategory } = req.body;
+    if (!subCategory) {
+      return res
+        .status(400)
+        .json({ status: "unsuccessful", message: "empty subcategory" });
     }
-    try{
+    try {
       const getRoom = await Room.findOne({ _id: roomId });
-      if(getRoom){
-
-        if(getRoom.subCategory){
-          getRoom.subCategory.push({subName: subCategory})
+      if (getRoom) {
+        if (getRoom.subCategory) {
+          getRoom.subCategory.push({ subName: subCategory });
         } else {
-          getRoom.subCategory = [{subName: subCategory}]
+          getRoom.subCategory = [{ subName: subCategory }];
         }
 
-        await Room.findOneAndUpdate({
-          _id: roomId,
-        }, {
-          subCategory: getRoom.subCategory
-        });
+        await Room.findOneAndUpdate(
+          {
+            _id: roomId,
+          },
+          {
+            subCategory: getRoom.subCategory,
+          }
+        );
         const afterUpdate = await Room.findOne({
           _id: roomId,
         });
-        return res.status(201).json({ status: "successful", data: afterUpdate });
+        return res
+          .status(201)
+          .json({ status: "successful", data: afterUpdate });
       } else {
-        return res.status(404).json({status: "unsuccessful", message: "room not found"})
+        return res
+          .status(404)
+          .json({ status: "unsuccessful", message: "room not found" });
       }
-    } catch (err){
-      console.log(err)
+    } catch (err) {
+      console.log(err);
       const errors = handleMongoErrors(err);
       return res.status(400).json({ errors });
     }
   },
   deleteSubCategory: async (req, res) => {
-    const { roomId , subCategoryId} = req.body;
-    if(!subCategoryId){
-      return res.status(400).json({status:"unsuccessful", message: "empty subcategory id"})
+    const { roomId, subCategoryId } = req.body;
+    if (!subCategoryId) {
+      return res
+        .status(400)
+        .json({ status: "unsuccessful", message: "empty subcategory id" });
     }
-    try{
+    try {
       const getRoom = await Room.findOne({ _id: roomId });
-      if(getRoom){
+      if (getRoom) {
+        const indexRemove = getRoom.subCategory.findIndex(
+          (v) => String(v._id) === subCategoryId
+        );
 
-        const indexRemove = getRoom.subCategory.findIndex(v => String(v._id) === subCategoryId)
-
-        if(indexRemove < 0) {
-          return res.status(404).json({status: "unsuccessful", message: "subcategory not found"})
+        if (indexRemove < 0) {
+          return res
+            .status(404)
+            .json({ status: "unsuccessful", message: "subcategory not found" });
         }
-        
-        await RoomBooking.deleteMany({ roomId: roomId , subCategoryId: subCategoryId});
 
-        getRoom.subCategory.splice(indexRemove,1)
-
-        await Room.findOneAndUpdate({
-          _id: roomId,
-        }, {
-          subCategory: getRoom.subCategory
+        await RoomBooking.deleteMany({
+          roomId: roomId,
+          subCategoryId: subCategoryId,
         });
+
+        getRoom.subCategory.splice(indexRemove, 1);
+
+        await Room.findOneAndUpdate(
+          {
+            _id: roomId,
+          },
+          {
+            subCategory: getRoom.subCategory,
+          }
+        );
         const afterUpdate = await Room.findOne({
           _id: roomId,
         });
 
-        return res.status(201).json({ status: "successful", data: afterUpdate });
+        return res
+          .status(201)
+          .json({ status: "successful", data: afterUpdate });
       } else {
-        return res.status(404).json({status: "unsuccessful", message: "room not found"})
+        return res
+          .status(404)
+          .json({ status: "unsuccessful", message: "room not found" });
       }
-    } catch (err){
-      console.log(err)
+    } catch (err) {
+      console.log(err);
       const errors = handleMongoErrors(err);
       return res.status(400).json({ errors });
     }

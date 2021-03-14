@@ -1,5 +1,6 @@
 const router = require("express").Router();
 const {isAdmin,requireAuth} = require("../middleware/authMiddleware")
+const {StudentAuth} = require("../middleware/studentMiddleware")
 const {addFacility,getFacility,openDate,getDate,deleteFacility,closeTime,openTime,booked,cancelBooking,addSubCategory,deleteSubCategory} = require("../controller/SportComplex")
 
 router.post("/addFacility", isAdmin, addFacility)
@@ -9,7 +10,7 @@ router.get("/getDate", requireAuth, getDate)
 router.delete("/deleteFacility", requireAuth, deleteFacility)
 router.patch("/closeTime", requireAuth, closeTime)
 router.patch("/openTime", requireAuth, openTime)
-router.patch("/booked", requireAuth, booked)
+router.patch("/booked", StudentAuth, booked)
 router.patch("/cancelBooking", requireAuth, cancelBooking)
 router.patch("/addSub", isAdmin, addSubCategory)
 router.patch("/deleteSub",isAdmin, deleteSubCategory)

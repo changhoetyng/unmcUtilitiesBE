@@ -26,24 +26,28 @@ const timeHandler = async (req, res, mode) => {
       subCategoryId,
       venueName,
       subCategoryName,
+      bookingId,
     } = req.body;
     //If body missing
     if (!time || !facilityId || !subCategoryId || !date) {
-      return res
-        .status(404)
-        .json({ status: "unsuccessful", message: "Insufficient information to process" });
+      return res.status(404).json({
+        status: "unsuccessful",
+        message: "Insufficient information to process",
+      });
+    }
+
+    if (mode === "cancelBooking" && !bookingId) {
+      return res.status(404).json({
+        status: "unsuccessful",
+        message: "Insufficient information to cancel booking",
+      });
     }
 
     if (mode === "booked" && (!studentId || !venueName || !subCategoryName)) {
-      return res
-        .status(404)
-        .json({ status: "unsuccessful", message: "Insufficient information to booked" });
-    }
-    
-    // If no student exists
-    const student = await Student.findOne({ studentId });
-    if(!student) {
-      return res.status(400).json({ error: "Invalid Student ID" });
+      return res.status(404).json({
+        status: "unsuccessful",
+        message: "Insufficient information to booked",
+      });
     }
 
     const getDate = await SportComplexBooking.findOne({
@@ -76,34 +80,42 @@ const timeHandler = async (req, res, mode) => {
 
       //For booking mode
       if (mode === "booked") {
-        if (getStatus !== "close" && getStatus !== "booked") {
-            const student = await Student.findOneAndUpdate(
-              { studentId },
-              {
-                $push: {
-                  bookings: {
-                    venueName,
-                    type: "sportComplex",
-                    subCategoryName,
-                    subCategoryId,
-                    venueId: facilityId,
-                    status: "booked",
-                    bookingTime: time,
-                    bookingDate: date
-                  },
-                },
-              }
-            );
+        // If no student exists
+        const student = await Student.findOne({ studentId });
+        if (!student) {
+          return res.status(400).json({ error: "Invalid Student ID" });
+        }
 
-            getDate.timeListing.find(
-              (v) => v.time === time
-            ).timeStatus.status = mode;
-            getDate.timeListing.find(
-              (v) => v.time === time
-            ).timeStatus.studentId = studentId;
-            getDate.timeListing.find(
-              (v) => v.time === time
-            ).timeStatus.bookingId = student._id;
+        if (getStatus !== "close" && getStatus !== "booked") {
+          const student = await Student.findOneAndUpdate(
+            { studentId },
+            {
+              $push: {
+                bookings: {
+                  venueName,
+                  type: "sportComplex",
+                  subCategoryName,
+                  subCategoryId,
+                  venueId: facilityId,
+                  status: "booked",
+                  bookingTime: time,
+                  bookingDate: date,
+                },
+              },
+            }
+          );
+
+          const getId = await Student.findOne({studentId})
+          const id = getId.bookings[getId.bookings.length - 1];
+          getDate.timeListing.find(
+            (v) => v.time === time
+          ).timeStatus.status = mode;
+          getDate.timeListing.find(
+            (v) => v.time === time
+          ).timeStatus.studentId = studentId;
+          getDate.timeListing.find(
+            (v) => v.time === time
+          ).timeStatus.bookingId = id._id;
         } else {
           return res
             .status(400)
@@ -113,13 +125,43 @@ const timeHandler = async (req, res, mode) => {
 
       //For cancel booking
       if (mode === "cancelBooking") {
-        if (getStatus === "booked") {
+        const student = await Student.findOne({
+          studentId,
+          bookings: {
+            $elemMatch: {
+              _id: bookingId,
+              type: "sportComplex",
+            }
+          
+          }
+        });
+
+        if (getStatus === "booked" && student) {
+          await Student.findOneAndUpdate(
+            {
+              studentId,
+              bookings: {
+                $elemMatch: {
+                  _id: bookingId,
+                  type: "sportComplex",
+                }
+              }
+            },
+            {
+              $set: {
+                "bookings.$.status": "cancelled",
+              },
+            }
+          );
+
           getDate.timeListing.find((v) => v.time === time).timeStatus.status =
             "close";
           getDate.timeListing.find(
             (v) => v.time === time
           ).timeStatus.studentId = null;
-          
+          getDate.timeListing.find(
+            (v) => v.time === time
+          ).timeStatus.bookingId = null;
         } else {
           return res
             .status(400)
@@ -154,7 +196,6 @@ module.exports = {
       try {
         const addFacility = await SportComplex.create({
           name,
-          currentUser: null,
           subCategory: null,
         });
         return res.status(201).json(addFacility);
@@ -311,9 +352,9 @@ module.exports = {
       const getFacility = await SportComplex.findOne({ _id: facilityId });
       if (getFacility) {
         if (getFacility.subCategory) {
-          getFacility.subCategory.push({ subName: subCategory });
+          getFacility.subCategory.push({ subName: subCategory, currentUser: null});
         } else {
-          getFacility.subCategory = [{ subName: subCategory }];
+          getFacility.subCategory = [{ subName: subCategory, currentUser: null }];
         }
 
         await SportComplex.findOneAndUpdate(

@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 
-const requireAuth = (req, res, next) => {
+const StudentAuth = (req, res, next) => {
   const { authorization } = req.headers;
   if (authorization) {
     const authComponents = authorization.split(" ");
@@ -19,4 +19,4 @@ const requireAuth = (req, res, next) => {
   }
 };
 
-module.exports = {requireAuth}
+module.exports = {StudentAuth}
