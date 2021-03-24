@@ -249,7 +249,7 @@ module.exports = {
 
           // For actual use
           // const timeDifference = moment().diff(moment(timeDate, "HH:mm DD/MM/YYYY"),'minutes')
-          if(timeDifference >= -10 && timeDifference < 15) {
+          if(timeDifference >= -10 && timeDifference < 60) {
             if(booked.type === "room") {
               const room = await Room.findById(booked.venueId)
               const checkCourt = room.subCategory.id(booked.subCategoryId)
