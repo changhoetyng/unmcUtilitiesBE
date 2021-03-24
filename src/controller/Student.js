@@ -42,6 +42,14 @@ const createAccessToken = (studentId, email) => {
   });
 };
 module.exports = {
+  getUser: async (req, res) => {
+    const user = await Student.findOne({ studentId: req.authStudentId });
+    if (user) {
+      return res.status(200).json({ user });
+    } else {
+      return res.status(404).json({ error: "user not found" });
+    }
+  },
   verifyRefreshToken: async (req, res) => {
     const refreshToken = req.query.refreshToken;
     if (refreshToken == null)
@@ -130,7 +138,7 @@ module.exports = {
       error: "No user found",
     });
   },
-  checkin: async (req, res) => {
+  test: async (req, res) => {
     const test = await Student.findOne({ studentId: req.authStudentId });
     return res.status(200).json({
       test,
@@ -236,7 +244,11 @@ module.exports = {
       if(booked) {
         if(booked.status === "booked"){
           const timeDate = booked.bookingTime + " " + booked.bookingDate
-          const timeDifference = moment("10:52 15/03/2021",  "HH:mm DD/MM/YYYY").diff(moment(timeDate, "HH:mm DD/MM/YYYY"),'minutes')
+          // For testing purpose
+          const timeDifference = moment("11:00 15/03/2021",  "HH:mm DD/MM/YYYY").diff(moment(timeDate, "HH:mm DD/MM/YYYY"),'minutes')
+
+          // For actual use
+          // const timeDifference = moment().diff(moment(timeDate, "HH:mm DD/MM/YYYY"),'minutes')
           if(timeDifference >= -10 && timeDifference < 15) {
             if(booked.type === "room") {
               const room = await Room.findById(booked.venueId)
@@ -245,6 +257,7 @@ module.exports = {
               if(checkCourt.currentUser === null) {
                 return res.status(200).json({ status: "successful", checkInStatus: true });
               } else {
+                console.log(checkCourt)
                 return res.status(200).json({ status: "successful", checkInStatus: false });
               }
             } 
@@ -275,4 +288,202 @@ module.exports = {
       return res.status(500).json({ status: "unsuccessful" });
     }
   },
+  checkIn: async (req, res) => {
+    try{
+      const { booked } = req.body;
+      const { venueId, subCategoryId } = booked
+      const studentId = req.authStudentId
+      
+      if(booked.type === "room") {
+        await Room.findOneAndUpdate(
+          {
+            _id: venueId,
+            subCategory: {
+              $elemMatch: {
+                _id: subCategoryId,
+              }
+            }
+          },
+          {
+            $set: {
+              "subCategory.$.currentUser": req.authStudentId,
+            },
+          }
+        );
+
+        await Student.findOneAndUpdate(
+          {
+            studentId,
+            bookings: {
+              $elemMatch: {
+                _id: booked._id,
+              }
+            }
+          },
+          {
+            $set: {
+              "bookings.$.status": "checkedIn",
+            },
+          }
+        );
+
+        return res.status(200).json({ status: "successful"});
+      } 
+      else if (booked.type === "sportComplex") {
+        await SportComplex.findOneAndUpdate(
+          {
+            _id: venueId,
+            subCategory: {
+              $elemMatch: {
+                _id: subCategoryId,
+              }
+            }
+          },
+          {
+            $set: {
+              "subCategory.$.currentUser": req.authStudentId,
+            },
+          }
+        );
+
+        await Student.findOneAndUpdate(
+          {
+            studentId,
+            bookings: {
+              $elemMatch: {
+                _id: booked._id,
+              }
+            }
+          },
+          {
+            $set: {
+              "bookings.$.status": "checkedIn",
+            },
+          }
+        );
+
+        return res.status(200).json({ status: "successful"});
+      } else {
+        return res.status(500).json({ status: "unsuccessful" });
+      }
+    } catch (err){
+      console.log(err)
+      return res.status(500).json({ status: "unsuccessful" });
+    }
+  },
+  checkOut: async (req, res) => {
+    try{
+      const { booked } = req.body;
+      const { venueId, subCategoryId } = booked
+      const studentId = req.authStudentId
+
+      if(booked.type === "room") {
+        const findCurrent = await Room.findOne(
+          {
+            _id: venueId,
+            subCategory: {
+              $elemMatch: {
+                _id: subCategoryId,
+                currentUser: req.authStudentId
+              }
+            }
+          },
+        );
+        if (findCurrent){
+          await Room.findOneAndUpdate(
+            {
+              _id: venueId,
+              subCategory: {
+                $elemMatch: {
+                  _id: subCategoryId,
+                  currentUser: req.authStudentId
+                }
+              }
+            },
+            {
+              $set: {
+                "subCategory.$.currentUser": null,
+              },
+            }
+          );
+          
+          await Student.findOneAndUpdate(
+            {
+              studentId,
+              bookings: {
+                $elemMatch: {
+                  _id: booked._id,
+                }
+              }
+            },
+            {
+              $set: {
+                "bookings.$.status": "checkedOut",
+              },
+            }
+          );
+
+          return res.status(200).json({ status: "successful"});
+        } else {
+          return res.status(500).json({ status: "unsuccessful"});
+        }
+      } 
+      else if (booked.type === "sportComplex") {
+        const findCurrent = await SportComplex.findOne(
+          {
+            _id: venueId,
+            subCategory: {
+              $elemMatch: {
+                _id: subCategoryId,
+                currentUser: req.authStudentId
+              }
+            }
+          },
+        );
+        if (findCurrent){
+          await SportComplex.findOneAndUpdate(
+            {
+              _id: venueId,
+              subCategory: {
+                $elemMatch: {
+                  _id: subCategoryId,
+                  currentUser: req.authStudentId
+                }
+              }
+            },
+            {
+              $set: {
+                "subCategory.$.currentUser": null,
+              },
+            }
+          );
+
+          await Student.findOneAndUpdate(
+            {
+              studentId,
+              bookings: {
+                $elemMatch: {
+                  _id: booked._id,
+                }
+              }
+            },
+            {
+              $set: {
+                "bookings.$.status": "checkedOut",
+              },
+            }
+          );
+
+          return res.status(200).json({ status: "successful"});
+        } else {
+          return res.status(500).json({ status: "unsuccessful"});
+        }
+      } else {
+        return res.status(500).json({ status: "unsuccessful" });
+      }
+    } catch (err){
+      console.log(err)
+      return res.status(500).json({ status: "unsuccessful" });
+    }
+  }
 };

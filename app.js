@@ -18,7 +18,7 @@ app.use("/api/", routeIndex);
 //connect db
 mongoose.connect(
   process.env.DB_CONNECTION,
-  { useNewUrlParser: true, useUnifiedTopology: true ,useCreateIndex: true},
+  { useNewUrlParser: true, useUnifiedTopology: true ,useCreateIndex: true,useFindAndModify: true},
   () => console.log("db connected")
 );
 

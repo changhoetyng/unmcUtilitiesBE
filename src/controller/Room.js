@@ -337,9 +337,9 @@ module.exports = {
       const getRoom = await Room.findOne({ _id: roomId });
       if (getRoom) {
         if (getRoom.subCategory) {
-          getRoom.subCategory.push({ subName: subCategory });
+          getRoom.subCategory.push({ subName: subCategory, currentUser: null });
         } else {
-          getRoom.subCategory = [{ subName: subCategory }];
+          getRoom.subCategory = [{ subName: subCategory, currentUser: null }];
         }
 
         await Room.findOneAndUpdate(
