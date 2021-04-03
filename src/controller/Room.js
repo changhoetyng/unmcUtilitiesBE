@@ -192,6 +192,7 @@ module.exports = {
         });
         return res.status(201).json(addRoom);
       } catch (err) {
+        console.log(err)
         const errors = handleMongoErrors(err);
         return res.status(400).json({ errors });
       }
