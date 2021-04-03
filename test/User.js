@@ -5,7 +5,6 @@ let User = require("../src/model/User");
 let server = require("../app");
 let { checkAdmin } = require("../src/defaultCheck/checkAdmin");
 
-//Require the dev-dependencies
 let chai = require("chai");
 let chaiHttp = require("chai-http");
 chai.use(chaiHttp);
@@ -13,8 +12,7 @@ let should = chai.should();
 
 let accessToken;
 
-//Our parent block
-describe("Login Staff", () => {
+describe("User", () => {
   before(async () => {
     await checkAdmin();
   });
