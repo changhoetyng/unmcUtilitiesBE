@@ -47,7 +47,7 @@ module.exports = {
     const { id } = req.params;
     try {
       const deleteUser = await User.deleteOne({ _id: id });
-      return res.status(204).json(deleteUser);
+      return res.status(204).json({status: "successful"});
     } catch (err) {
       const errors = handleMongoErrors(err);
       return res.status(400).json({ errors });
@@ -70,7 +70,7 @@ module.exports = {
     }
     if (!validator.isEmail(email)) {
       return res
-        .status(200)
+        .status(400)
         .json({ status: "error has occured", message: "incorrect email" });
     }
     //Encrypt
