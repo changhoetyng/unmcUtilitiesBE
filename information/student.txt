@@ -14,10 +14,48 @@ GET /verifyUser
 Verify student
 
 GET /token
-Query: Update accessToken
+query: refreshToken
 
- - Announcment
+GET /getUser
+Return information of the user
+
+- SPORT COMPLEX
+GET /getFacilityName
+Return all facilities
+
+GET /showSelectedFacility/:facilityId
+params: facilityId
+Return selected facility
+
+- ROOMS
+GET /showSelectedRoom/:roomId
+params: roomId
+Return selected room
+
+GET /getRoomName
+Return all room
+
+-BOOKINGS
+GET /getBooked
+Return all booked facilities
+
+GET /getPast
+Return all past facilities
+
+GET /checkInEnabled/:bookedId
+params: bookedId
+
+POST /checkin
+body: booked
+Check into the facility 
+
+POST /checkout
+body: booked
+Check out into facility
+
+- ANNOUNCMENT
 
 POST /getAnnouncement
 QP: {limit: Integer(optional)}
 Retrieve all the announcement in the database
+

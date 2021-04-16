@@ -13,13 +13,13 @@ router.get("/getUser",StudentAuth,getUser)
 // Sport Complex
 router.get("/getFacilityName", StudentAuth, getFacilityName)
 router.get("/showSelectedFacility/:facilityId", StudentAuth, showSelectedFacility)
-router.get("/showSelectedRoom/:roomId", StudentAuth, showSelectedRoom)
+
 
 // Rooms
+router.get("/showSelectedRoom/:roomId", StudentAuth, showSelectedRoom)
 router.get("/getRoomName", StudentAuth, getRoomName)
 
 // Bookings
-router.post("/addBookingHistory")
 router.get("/getBooked",StudentAuth,getBooked)
 router.get("/getPast",StudentAuth,getPast)
 router.get("/checkInEnabled/:bookedId",StudentAuth, checkInEnabled)
