@@ -76,7 +76,11 @@ module.exports = {
     }
 
     if (!testStudentId.test(studentId)) {
-      return res.status(400).json({ error: "studentid invalid" });
+      return res.status(400).json({ error: "Invalid Student ID" });
+    }
+
+    if(await Student.findOne({studentId}) !== null) {
+      return res.status(400).json({ error: "Student ID already exists." });
     }
 
     if (!validator.isEmail(email)) {

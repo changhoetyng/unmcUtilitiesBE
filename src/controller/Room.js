@@ -226,11 +226,13 @@ module.exports = {
       const { roomId, date, subCategoryId } = req.body;
 
       const roomCheck = await RoomBooking.findOne({
+        roomId,
         date: moment(date, "DD/MM/YYYY").format("DD/MM/YYYY"),
+        subCategoryId
       });
 
       if (roomCheck) {
-        return res.status(400).json({ status: "time already exists" });
+        return res.status(400).json({ status: "unsuccessful", message: "time already exists" });
       }
 
       const getRoom = await Room.findOne({ _id: roomId });

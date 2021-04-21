@@ -101,7 +101,7 @@ module.exports = {
           { username: username }
         );
 
-        const updatedUser = await User.findOne({ username: req.authUsername });
+        const updatedUser = await User.findOne({ username: username });
         const accessToken = createAccessToken(
           updatedUser.username,
           updatedUser.role,
@@ -119,6 +119,7 @@ module.exports = {
           refreshToken: refreshToken,
         });
       } catch (err) {
+        console.log(err)
         return res.status(400).json({ status: "error has occured" });
       }
     } else {
@@ -128,9 +129,10 @@ module.exports = {
   changeEmail: async (req, res) => {
     const { email } = req.body;
     if (!validator.isEmail(email)) {
+      console.log("hello")
       return res
-        .status(200)
-        .json({ status: "error has occured", message: "incorrect email" });
+        .status(400)
+        .json({ status: "error has occured", message: "Incorrect email" });
     }
     const user = await User.findOne({ username: req.authUsername });
     if (user) {
