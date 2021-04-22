@@ -68,6 +68,7 @@ const timeHandler = async (req, res, mode) => {
       //For closing and opening booking
       if (mode === "close" || mode === "open") {
         if (getStatus !== "booked") {
+          console.log(getDate.timeListing)
           getDate.timeListing.find(
             (v) => v.time === time
           ).timeStatus.status = mode;

@@ -249,7 +249,7 @@ module.exports = {
         if(booked.status === "booked"){
           const timeDate = booked.bookingTime + " " + booked.bookingDate
           // For testing purpose
-          const timeDifference = moment("11:00 15/03/2021",  "HH:mm DD/MM/YYYY").diff(moment(timeDate, "HH:mm DD/MM/YYYY"),'minutes')
+          const timeDifference = moment("09:00 23/04/2021",  "HH:mm DD/MM/YYYY").diff(moment(timeDate, "HH:mm DD/MM/YYYY"),'minutes')
 
           // For actual use
           // const timeDifference = moment().diff(moment(timeDate, "HH:mm DD/MM/YYYY"),'minutes')
@@ -331,6 +331,22 @@ module.exports = {
           }
         );
 
+        const getDate = await RoomBooking.findOne({
+          roomId: booked.venueId,
+          date: booked.bookingDate,
+          subCategoryId: booked.subCategoryId,
+        });
+
+        getDate.timeListing.find(
+          (v) => v.time === booked.bookingTime
+        ).timeStatus.status = "checked in";
+
+        await RoomBooking.findOneAndUpdate(
+          {  roomId: booked.venueId,
+            date: booked.bookingDate,
+            subCategoryId: booked.subCategoryId },
+          { timeListing: getDate.timeListing }
+        );
         return res.status(200).json({ status: "successful"});
       } 
       else if (booked.type === "sportComplex") {
@@ -365,10 +381,26 @@ module.exports = {
             },
           }
         );
+        const getDate = await SportComplexBooking.findOne({
+          facilityId: booked.venueId,
+          date: booked.bookingDate,
+          subCategoryId: booked.subCategoryId,
+        });
+
+        getDate.timeListing.find(
+          (v) => v.time === booked.bookingTime
+        ).timeStatus.status = "checked in";
+
+        await SportComplexBooking.findOneAndUpdate(
+          {  facilityId: booked.venueId,
+            date: booked.bookingDate,
+            subCategoryId: booked.subCategoryId },
+          { timeListing: getDate.timeListing }
+        );
 
         return res.status(200).json({ status: "successful"});
       } else {
-        return res.status(500).json({ status: "unsuccessful" });
+        return res.status(500).json({ status: "unsuccessful efefrr" });
       }
     } catch (err){
       console.log(err)
@@ -426,7 +458,22 @@ module.exports = {
               },
             }
           );
-
+          const getDate = await RoomBooking.findOne({
+            roomId: booked.venueId,
+            date: booked.bookingDate,
+            subCategoryId: booked.subCategoryId,
+          });
+  
+          getDate.timeListing.find(
+            (v) => v.time === booked.bookingTime
+          ).timeStatus.status = "checked out";
+  
+          await RoomBooking.findOneAndUpdate(
+            {  roomId: booked.venueId,
+              date: booked.bookingDate,
+              subCategoryId: booked.subCategoryId },
+            { timeListing: getDate.timeListing }
+          );
           return res.status(200).json({ status: "successful"});
         } else {
           return res.status(500).json({ status: "unsuccessful"});
@@ -477,7 +524,22 @@ module.exports = {
               },
             }
           );
-
+          const getDate = await SportComplexBooking.findOne({
+            facilityId: booked.venueId,
+            date: booked.bookingDate,
+            subCategoryId: booked.subCategoryId,
+          });
+  
+          getDate.timeListing.find(
+            (v) => v.time === booked.bookingTime
+          ).timeStatus.status = "checked out";
+  
+          await SportComplexBooking.findOneAndUpdate(
+            {  facilityId: booked.venueId,
+              date: booked.bookingDate,
+              subCategoryId: booked.subCategoryId },
+            { timeListing: getDate.timeListing }
+          );
           return res.status(200).json({ status: "successful"});
         } else {
           return res.status(500).json({ status: "unsuccessful"});

@@ -19,7 +19,7 @@ const roomBookingSchema = mongoose.Schema({
       timeStatus: {
         status: {
           type: String,
-          enum: ["close", "open", "booked"],
+          enum: ["close", "open", "booked", "checked in", "checked out"],
           required: [true, "Please insert role"],
         },
         studentId: {
